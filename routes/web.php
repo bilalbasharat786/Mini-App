@@ -1,23 +1,20 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Models\Task;
 
-// 1. Tasks dikhane ka route
 Route::get('/', function () {
-    $tasks = Task::all(); // Database se sab tasks nikalo
-    return view('todo', compact('tasks')); // Frontend (todo.blade.php) ko bhej do
+    return view('welcome');
 });
 
-// 2. Naya Task add karne ka route
-Route::post('/add-task', function (Request $request) {
-    Task::create(['title' => $request->task_name]);
-    return back(); // Wapas usi page par le jao
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// 3. Task delete karne ka route
-Route::get('/delete-task/{id}', function ($id) {
-    Task::destroy($id);
-    return back();
-});
+require __DIR__.'/auth.php';
