@@ -21,9 +21,12 @@
                         @endif
                     </span>
                 </a>
+                
+                <a href="{{ route('user.orders') }}" class="text-sm font-bold text-blue-600 hover:underline">My Orders</a>
+                
                 <a href="{{ url('/welcome') }}" class="text-sm font-semibold text-gray-600 hover:text-black">Account</a>
             </div>
-            </div>
+        </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">

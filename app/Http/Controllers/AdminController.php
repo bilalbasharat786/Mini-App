@@ -58,4 +58,62 @@ class AdminController extends Controller
             return back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
+    // Admin: Saare Orders Dekhna
+    public function viewOrders() {
+        // 'items.product' ka matlab hai ke OrderItem aur Product dono ka data sath fetch karo
+        $orders = \App\Models\Order::with('items.product')->orderBy('created_at', 'desc')->get();
+        
+        return view('admin.orders', compact('orders'));
+    }
+
+
+    // Admin: Order ka Status Update Karna
+    public function updateOrderStatus(Request $request, $id) {
+        $order = \App\Models\Order::findOrFail($id);
+        $order->status = $request->status;
+        $order->save();
+        
+        return back()->with('success', 'Order status updated successfully!');
+    }
+    // 1. Saare Products ki List Dikhana (Manage Products)
+    public function manageProducts() {
+        $products = \App\Models\Product::with('category')->orderBy('created_at', 'desc')->get();
+        return view('admin.manage_products', compact('products'));
+    }
+
+    // 2. Edit ka Form Dikhana
+    public function editProduct($id) {
+        $product = \App\Models\Product::findOrFail($id);
+        $categories = \App\Models\Category::all();
+        return view('admin.edit_product', compact('product', 'categories'));
+    }
+
+    // 3. Form se Data la kar Update karna (Bina Image ke)
+    public function updateProduct(Request $request, $id) {
+        $request->validate([
+            'name' => 'required',
+            'price' => 'required|numeric',
+            'category_id' => 'required',
+        ]);
+
+        $product = \App\Models\Product::findOrFail($id);
+        
+        $product->update([
+            'category_id' => $request->category_id,
+            'name' => $request->name,
+            'description' => $request->description ?? 'No description',
+            'price' => $request->price,
+            'stock' => $request->stock ?? 0,
+        ]);
+
+        return redirect()->route('admin.manage_products')->with('success', 'Product Updated Successfully!');
+    }
+
+    // 4. Product ko hamesha ke liye Delete karna
+    public function deleteProduct($id) {
+        $product = \App\Models\Product::findOrFail($id);
+        $product->delete();
+        
+        return back()->with('success', 'Product Deleted Successfully!');
+    }
 }

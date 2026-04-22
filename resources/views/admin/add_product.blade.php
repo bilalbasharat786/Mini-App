@@ -4,8 +4,19 @@
     <title>Admin - Add Product</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100 p-10">
 
+<body class="bg-gray-100 p-50">
+<header class="bg-black shadow-sm py-4">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">Admin Dashboard</h1>
+            <div class="flex flex-wrap justify-center gap-4 items-center">
+                <a href="{{ route('admin.add_product') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">Add Product</a>
+                <a href="{{ route('admin.manage_products') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">Manage Products</a>
+                <a href="{{ route('admin.orders') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">View Orders</a>
+                <a href="{{ route('shop.home') }}" class="text-sm font-bold text-blue-400 hover:text-blue-300 transition" target="_blank">Storefront ↗</a>
+            </div>
+        </div>
+    </header>
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md">
         <h2 class="text-2xl font-bold mb-6 text-gray-800">Add New Product</h2>
 
