@@ -12,6 +12,11 @@ use App\Http\Controllers\OrderController;
 // 1. Splash Screen aur Store (Aam User)
 Route::get('/welcome', function () { return view('welcome'); });
 Route::get('/', [ShopController::class, 'index'])->name('shop.home');
+Route::get('/category/{slug}', [ShopController::class, 'category'])->name('shop.category');
+// Naya Search Route
+Route::get('/search', [App\Http\Controllers\ShopController::class, 'search'])->name('shop.search');
+// Contact Us Route
+Route::get('/contact', [App\Http\Controllers\ShopController::class, 'contact'])->name('shop.contact');
 
 // 2. Admin ke Routes (Products add karna)
 Route::get('/admin/add-product', [AdminController::class, 'addProduct'])->name('admin.add_product');
@@ -19,6 +24,10 @@ Route::post('/admin/store-product', [AdminController::class, 'storeProduct'])->n
 Route::get('/admin/orders', [App\Http\Controllers\AdminController::class, 'viewOrders'])->name('admin.orders');
 Route::post('/admin/orders/{id}/status', [App\Http\Controllers\AdminController::class, 'updateOrderStatus'])->name('admin.order.status');
 Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('user.orders');
+// Route file mein jahan admin ki baki routes hain wahan yeh 3 lines add karein:
+Route::get('/admin/sliders', [App\Http\Controllers\AdminController::class, 'manageSliders'])->name('admin.sliders');
+Route::post('/admin/sliders', [App\Http\Controllers\AdminController::class, 'storeSlider'])->name('admin.store_slider');
+Route::delete('/admin/sliders/{id}', [App\Http\Controllers\AdminController::class, 'deleteSlider'])->name('admin.delete_slider');
 
 // 3. Breeze Default Routes (Login ke baad dashboard aur profile)
 Route::get('/dashboard', function () {
@@ -32,9 +41,15 @@ Route::middleware('auth')->group(function () {
 });
 
 // Cart ke Routes (Aam user wale routes ke sath inko bhi rakh dein)
+Route::get('/product/{id}', [App\Http\Controllers\ShopController::class, 'showProduct'])->name('shop.show');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
 Route::post('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/update/{id}', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
+// Wishlist Routes (Guest Friendly)
+Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
+Route::post('/wishlist/add/{id}', [App\Http\Controllers\WishlistController::class, 'add'])->name('wishlist.add');
+Route::post('/wishlist/remove/{id}', [App\Http\Controllers\WishlistController::class, 'remove'])->name('wishlist.remove');
 
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');

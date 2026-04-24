@@ -37,21 +37,27 @@ class CheckoutController extends Controller
             'city' => 'required',
         ]);
 
+        // NAYA: Pehle check karo ke cart hai bhi ya nahi
+        $cart = session()->get('cart', []);
+        if(empty($cart)) {
+            return redirect()->route('shop.home')->with('error', 'Aapka cart khali hai!');
+        }
+
         try {
-            $cart = session()->get('cart');
             $total = 0;
-            foreach($cart as $item) { $total += $item['price'] * $item['quantity']; }
+            foreach($cart as $item) { 
+                $total += $item['price'] * $item['quantity']; 
+            }
 
             // 1. Order main table mein save karo
-            // Note: Agar user login nahi hai toh hum temporary 1 use kar sakte hain ya Auth::id()
             $order = Order::create([
-              'user_id' => Auth::id(), // Agar banda login nahi hai toh DB mein chup-chaap 'null' save ho jayega
+                'user_id' => Auth::id(), // Agar login nahi hai toh null jayega
                 'total_price' => $total,
                 'status' => 'pending',
                 'shipping_address' => $request->address . ", " . $request->city . " (Phone: " . $request->phone . ")",
             ]);
 
-            // 2. Order ke items items wale table mein save karo
+            // 2. Order ke items table mein save karo
             foreach($cart as $id => $details) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -66,11 +72,17 @@ class CheckoutController extends Controller
             // 3. Cart khali kar do
             session()->forget('cart');
 
-            return view('checkout.success', ['order_id' => $order->id]);
+            // 4. Redirect to Orders
+            return redirect()->route('user.orders')->with('success', 'Order placed successfully!');
 
         } catch (\Exception $e) {
+            // NAYA: Agar error aaye toh redirect back hone par cart check se masla na ho
             Log::error("CHECKOUT FAIL: " . $e->getMessage());
-            return back()->with('error', 'Order place nahi ho saka: ' . $e->getMessage());
+            
+            // Cart wapis session mein daal do taake page khali na ho
+            session()->put('cart', $cart); 
+            
+            return redirect()->route('checkout.index')->with('error', 'Database Error: ' . $e->getMessage());
         }
     }
 }

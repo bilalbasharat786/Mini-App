@@ -64,4 +64,20 @@ class CartController extends Controller
         // YAHAN THEEK KIYA HAI: Remove karne ke baad back usi cart page par rahay
         return redirect()->back()->with('success', 'Product removed from cart!');
     }
+    // Cart mein Quantity Update karne ka function
+    public function update(Request $request, $id) {
+        $request->validate([
+            'quantity' => 'required|numeric|min:1'
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if(isset($cart[$id])) {
+            $cart[$id]['quantity'] = $request->quantity;
+            session()->put('cart', $cart);
+            return back()->with('success', 'Cart quantity updated!');
+        }
+
+        return back()->with('error', 'Item not found in cart.');
+    }
 }
