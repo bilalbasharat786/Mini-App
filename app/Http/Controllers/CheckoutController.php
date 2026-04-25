@@ -18,9 +18,11 @@ class CheckoutController extends Controller
             return redirect()->route('shop.home')->with('error', 'Aapka cart khali hai!');
         }
 
+        // NAYA LOGIC: Yahan discount check ho raha hai total ke liye
         $total = 0;
         foreach($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
+            $activePrice = (isset($item['discount_price']) && $item['discount_price'] > 0) ? $item['discount_price'] : $item['price'];
+            $total += $activePrice * $item['quantity'];
         }
 
         return view('checkout.index', compact('cart', 'total'));
@@ -37,33 +39,42 @@ class CheckoutController extends Controller
             'city' => 'required',
         ]);
 
-        // NAYA: Pehle check karo ke cart hai bhi ya nahi
         $cart = session()->get('cart', []);
         if(empty($cart)) {
             return redirect()->route('shop.home')->with('error', 'Aapka cart khali hai!');
         }
 
         try {
+            // NAYA LOGIC: Database mein save karne se pehle bhi discount check karo
             $total = 0;
             foreach($cart as $item) { 
-                $total += $item['price'] * $item['quantity']; 
+                $activePrice = (isset($item['discount_price']) && $item['discount_price'] > 0) ? $item['discount_price'] : $item['price'];
+                $total += $activePrice * $item['quantity']; 
             }
 
             // 1. Order main table mein save karo
             $order = Order::create([
-                'user_id' => Auth::id(), // Agar login nahi hai toh null jayega
-                'total_price' => $total,
+                'user_id' => Auth::id(), 
+                'total_price' => $total, // Ab yahan sahi discount wala total jayega
                 'status' => 'pending',
                 'shipping_address' => $request->address . ", " . $request->city . " (Phone: " . $request->phone . ")",
             ]);
 
+            // Guest user ke liye order ki ID session mein mehfooz kar lein
+            $guestOrders = session()->get('guest_orders', []);
+            $guestOrders[] = $order->id;
+            session()->put('guest_orders', $guestOrders);
+            
             // 2. Order ke items table mein save karo
             foreach($cart as $id => $details) {
+                // Item ki price bhi discount wali save karni hai
+                $itemActivePrice = (isset($details['discount_price']) && $details['discount_price'] > 0) ? $details['discount_price'] : $details['price'];
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $id,
                     'quantity' => $details['quantity'],
-                    'price' => $details['price'],
+                    'price' => $itemActivePrice, // Sahi price save hogi
                 ]);
             }
 
@@ -76,12 +87,8 @@ class CheckoutController extends Controller
             return redirect()->route('user.orders')->with('success', 'Order placed successfully!');
 
         } catch (\Exception $e) {
-            // NAYA: Agar error aaye toh redirect back hone par cart check se masla na ho
             Log::error("CHECKOUT FAIL: " . $e->getMessage());
-            
-            // Cart wapis session mein daal do taake page khali na ho
             session()->put('cart', $cart); 
-            
             return redirect()->route('checkout.index')->with('error', 'Database Error: ' . $e->getMessage());
         }
     }

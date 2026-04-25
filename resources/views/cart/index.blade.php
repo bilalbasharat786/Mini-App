@@ -18,6 +18,14 @@
         @endif
 
         @if(count($cart) > 0)
+            @php
+                $calculatedTotal = 0;
+                foreach($cart as $details) {
+                    $itemPrice = (isset($details['discount_price']) && $details['discount_price'] > 0) ? $details['discount_price'] : $details['price'];
+                    $calculatedTotal += ($itemPrice * $details['quantity']);
+                }
+            @endphp
+
             <div class="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
                 
                 <div class="w-full lg:w-[65%]">
@@ -31,6 +39,11 @@
 
                     <div class="flex flex-col gap-6 sm:gap-8 mt-6 sm:mt-8">
                         @foreach($cart as $id => $details)
+                            @php
+                                $hasDiscount = isset($details['discount_price']) && $details['discount_price'] > 0;
+                                $activePrice = $hasDiscount ? $details['discount_price'] : $details['price'];
+                            @endphp
+
                             <div class="grid grid-cols-[auto_1fr] sm:grid-cols-[3fr_1fr_1fr_auto] gap-4 sm:gap-6 items-center pb-6 border-b border-gray-100 relative group transition-all">
                                 
                                 <div class="flex gap-4 sm:gap-6">
@@ -38,7 +51,7 @@
                                         @if(isset($details['image']) && str_starts_with($details['image'], 'http'))
                                             <img src="{{ $details['image'] }}" class="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-500" alt="Product Image">
                                         @else
-                                            <img src="{{ asset('storage/' . ($details['image'] ?? '')) }}" class="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-500" alt="Product Image">
+                                            <img src="{{ asset(($details['image'] ?? '')) }}" class="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-500" alt="Product Image">
                                         @endif
                                     </div>
                                     <div class="flex flex-col justify-center">
@@ -58,9 +71,14 @@
                                             @endif
                                         </div>
                                         
-                                        <p class="sm:hidden mt-3 text-sm font-semibold text-[#121212]">
-                                            PKR {{ number_format($details['price'], 2) }}
-                                        </p>
+                                        <div class="sm:hidden mt-3">
+                                            @if($hasDiscount)
+                                                <span class="text-sm font-semibold text-[#C5A059]">PKR {{ number_format($details['discount_price']) }}</span>
+                                                <span class="text-xs text-gray-400 line-through ml-2">PKR {{ number_format($details['price']) }}</span>
+                                            @else
+                                                <span class="text-sm font-semibold text-[#121212]">PKR {{ number_format($details['price']) }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
 
@@ -80,9 +98,18 @@
                                 </div>
 
                                 <div class="hidden sm:block text-right">
-                                    <p class="text-sm font-bold text-[#121212]">
-                                        PKR {{ number_format($details['price'] * $details['quantity'], 2) }}
-                                    </p>
+                                    @if($hasDiscount)
+                                        <p class="text-sm font-bold text-[#C5A059]">
+                                            PKR {{ number_format($details['discount_price'] * $details['quantity']) }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 line-through mt-1">
+                                            PKR {{ number_format($details['price'] * $details['quantity']) }}
+                                        </p>
+                                    @else
+                                        <p class="text-sm font-bold text-[#121212]">
+                                            PKR {{ number_format($details['price'] * $details['quantity']) }}
+                                        </p>
+                                    @endif
                                 </div>
 
                                 <div class="absolute top-0 right-0 sm:static">
@@ -113,21 +140,21 @@
                         <div class="flex flex-col gap-4 text-sm text-gray-600 mb-8">
                             <div class="flex justify-between items-center">
                                 <p>Subtotal</p>
-                                <p>PKR {{ number_format($total, 2) }}</p>
+                                <p>PKR {{ number_format($calculatedTotal) }}</p>
                             </div>
                             
                             <hr class="border-gray-200" />
                             
                             <div class="flex justify-between items-center">
                                 <p>Shipping Fee</p>
-                                <p>PKR 0.00</p>
+                                <p>PKR 0</p>
                             </div>
                             
                             <hr class="border-gray-200" />
                             
                             <div class="flex justify-between items-center text-base mt-2">
                                 <b class="text-[#121212]">Total</b>
-                                <b class="text-[#121212]">PKR {{ number_format($total, 2) }}</b>
+                                <b class="text-[#121212]">PKR {{ number_format($calculatedTotal) }}</b>
                             </div>
                         </div>
 

@@ -7,7 +7,7 @@
                 <div id="slider-container" class="flex transition-transform duration-700 ease-in-out h-full w-full" style="transform: translateX(0%);">
                     @foreach($sliders as $slider)
                         <div class="min-w-full h-full relative outline-none">
-                            <img src="{{ asset('storage/' . $slider->image_url) }}" class="w-full h-full object-cover transform transition-transform duration-[10000ms] hover:scale-105">
+                            <img src="{{ asset($slider->image_url) }}" class="w-full h-full object-cover transform transition-transform duration-[10000ms] hover:scale-105">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
                         </div>
                     @endforeach
@@ -100,7 +100,7 @@
 
                                 <a href="{{ route('shop.show', $product->id) }}" class="block w-full h-full">
                                     @if($product->image_url)
-                                        <img src="{{ str_starts_with($product->image_url, 'http') ? $product->image_url : asset('storage/' . $product->image_url) }}" 
+                                        <img src="{{ str_starts_with($product->image_url, 'http') ? $product->image_url : asset($product->image_url) }}" 
                                              alt="{{ $product->name }}" 
                                              class="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105">
                                     @else

@@ -56,7 +56,7 @@
                                                 @if(isset($item->product->image_url) && str_starts_with($item->product->image_url, 'http'))
                                                     <img src="{{ $item->product->image_url }}" class="w-full h-full object-cover object-top" alt="Product Image">
                                                 @elseif(isset($item->product->image_url))
-                                                    <img src="{{ asset('storage/' . $item->product->image_url) }}" class="w-full h-full object-cover object-top" alt="Product Image">
+                                                    <img src="{{ asset($item->product->image_url) }}" class="w-full h-full object-cover object-top" alt="Product Image">
                                                 @else
                                                     <img src="https://picsum.photos/seed/{{ $item->id }}/100/133" class="w-full h-full object-cover object-top" alt="Dummy Image">
                                                 @endif
@@ -75,8 +75,20 @@
                                             </div>
                                             
                                             <div class="text-right">
-                                                <p class="font-bold text-[#121212] text-sm sm:text-base">PKR {{ number_format($item->price * $item->quantity) }}</p>
+                                                @if(isset($item->product) && $item->product->discount_price > 0 && $item->price < $item->product->price)
+                                                    <p class="text-sm sm:text-base font-bold text-[#C5A059]">
+                                                        PKR {{ number_format($item->price * $item->quantity) }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-400 line-through mt-1">
+                                                        PKR {{ number_format($item->product->price * $item->quantity) }}
+                                                    </p>
+                                                @else
+                                                    <p class="font-bold text-[#121212] text-sm sm:text-base">
+                                                        PKR {{ number_format($item->price * $item->quantity) }}
+                                                    </p>
+                                                @endif
                                             </div>
+
                                         </div>
                                     </li>
                                 @endforeach

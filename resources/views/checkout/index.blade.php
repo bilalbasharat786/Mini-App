@@ -61,13 +61,16 @@
                                     @if(isset($item['image']) && str_starts_with($item['image'], 'http'))
                                         <img src="{{ $item['image'] }}" class="w-12 h-16 object-cover border border-gray-100" alt="Product Image">
                                     @else
-                                        <img src="{{ asset('storage/' . ($item['image'] ?? '')) }}" class="w-12 h-16 object-cover border border-gray-100" alt="Product Image">
+                                        <img src="{{ asset(($item['image'] ?? '')) }}" class="w-12 h-16 object-cover border border-gray-100" alt="Product Image">
                                     @endif
                                     <div class="flex-1">
                                         <p class="text-sm font-bold text-[#121212] truncate">{{ $item['name'] }}</p>
                                         <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">Qty: {{ $item['quantity'] }}</p>
                                     </div>
-                                    <p class="text-sm font-bold text-[#C5A059]">PKR {{ number_format($item['price'] * $item['quantity']) }}</p>
+@php
+    $activePrice = (isset($item['discount_price']) && $item['discount_price'] > 0) ? $item['discount_price'] : $item['price'];
+@endphp
+<p class="text-sm font-bold text-[#C5A059]">PKR {{ number_format($activePrice * $item['quantity']) }}</p>
                                 </div>
                             @endforeach
                         </div>

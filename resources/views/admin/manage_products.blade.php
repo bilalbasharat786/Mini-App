@@ -45,7 +45,7 @@
                                     @if(str_starts_with($product->image_url, 'http'))
                                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-12 h-12 object-cover rounded-lg shadow-sm border border-gray-200">
                                     @else
-                                        <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" class="w-12 h-12 object-cover rounded-lg shadow-sm border border-gray-200">
+                                        <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" class="w-12 h-12 object-cover rounded-lg shadow-sm border border-gray-200">
                                     @endif
                                 @else
                                     <img src="https://picsum.photos/seed/{{ $product->id }}/400/300" alt="Dummy Image" class="w-12 h-12 object-cover rounded-lg shadow-sm border border-gray-200">

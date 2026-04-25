@@ -10,7 +10,7 @@
             <h1 class="text-2xl font-extrabold text-white tracking-tight">Admin Dashboard</h1>
             <div class="flex gap-4 items-center">
                 <a href="{{ route('admin.add_product') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">Add Product</a>
-                                <a href="{{ route('admin.manage_products') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">Manage Products</a>
+                <a href="{{ route('admin.manage_products') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">Manage Products</a>
                 <a href="{{ route('admin.orders') }}" class="text-sm font-semibold text-gray-300 hover:text-white transition">View Orders</a>  
                 <a href="{{ route('admin.sliders') }}" class="text-sm font-semibold text-blue-400 hover:text-blue-300 transition">Manage Sliders</a>
                 <a href="{{ route('shop.home') }}" class="text-sm font-bold text-blue-400 hover:text-blue-300 transition" target="_blank">Storefront ↗</a>
@@ -36,7 +36,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($sliders as $slider)
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 relative">
-                <img src="{{ asset('storage/' . $slider->image_url) }}" class="w-full h-40 object-cover rounded-lg mb-4">
+                
+                <img src="{{ asset($slider->image_url) }}" class="w-full h-40 object-cover rounded-lg mb-4" alt="Slider Image">
+                
                 <form action="{{ route('admin.delete_slider', $slider->id) }}" method="POST" onsubmit="return confirm('Delete this slider?');">
                     @csrf @method('DELETE')
                     <button class="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600">Delete Slider</button>

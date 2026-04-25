@@ -2,9 +2,10 @@
 
     @php
         // Image Logic
+       // Image Logic
         function getImageUrl($url, $id) {
             if (!$url) return null;
-            return str_starts_with($url, 'http') ? $url : asset('storage/' . $url);
+            return str_starts_with($url, 'http') ? $url : asset($url);
         }
         
         $img1 = getImageUrl($product->image_url, $product->id) ?? "https://picsum.photos/seed/{$product->id}/800/800";
@@ -198,7 +199,7 @@
 
                             <a href="{{ route('shop.show', $related->id) }}" class="block w-full h-full">
                                 @if($related->image_url)
-                                    <img src="{{ str_starts_with($related->image_url, 'http') ? $related->image_url : asset('storage/' . $related->image_url) }}" 
+                                    <img src="{{ str_starts_with($related->image_url, 'http') ? $related->image_url : asset($related->image_url) }}" 
                                          alt="{{ $related->name }}" class="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105">
                                 @else
                                     <img src="https://picsum.photos/seed/{{ $related->id }}/400/500" alt="Dummy Image" class="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105">

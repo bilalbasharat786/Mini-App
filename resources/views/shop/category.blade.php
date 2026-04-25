@@ -47,7 +47,7 @@
 
                                 <a href="{{ route('shop.show', $product->id) }}" class="block w-full h-full">
                                     @if($product->image_url)
-                                        <img src="{{ str_starts_with($product->image_url, 'http') ? $product->image_url : asset('storage/' . $product->image_url) }}" 
+                                        <img src="{{ str_starts_with($product->image_url, 'http') ? $product->image_url : asset($product->image_url) }}" 
                                              alt="{{ $product->name }}" 
                                              class="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105">
                                     @else

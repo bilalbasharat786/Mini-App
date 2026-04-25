@@ -49,16 +49,39 @@
                                     @foreach($order->items as $item)
                                         <li class="flex items-center justify-between">
                                             <div class="flex items-center gap-4">
-                                                <img src="{{ $item->product->image_url ?? 'https://picsum.photos/seed/'.$item->product->id.'/100/100' }}" 
-                                                     class="w-16 h-16 object-cover rounded shadow-sm">
+                                                <img src="{{ isset($item->product->image_url) ? asset($item->product->image_url) : 'https://picsum.photos/seed/'.$item->product->id.'/100/100' }}" 
+                                                     class="w-16 h-16 object-cover rounded shadow-sm" alt="Product Image">
                                                 
                                                 <div>
                                                     <p class="font-bold text-gray-900">{{ $item->product->name ?? 'Deleted Product' }}</p>
-                                                    <p class="text-sm text-gray-500">Qty: {{ $item->quantity }} x ${{ number_format($item->price, 2) }}</p>
+                                                    
+                                                    <div class="flex flex-wrap items-center gap-3 mt-1">
+                                                        <p class="text-sm text-gray-500">Qty: {{ $item->quantity }} x PKR {{ number_format($item->price) }}</p>
+                                                        
+                                                        @if(isset($item->size) && $item->size)
+                                                            <span class="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-semibold border border-gray-200">
+                                                                Size: {{ $item->size }}
+                                                            </span>
+                                                        @endif
+
+                                                        @if(isset($item->color) && $item->color)
+                                                            <span class="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-semibold border border-gray-200 flex items-center gap-1.5">
+                                                                Color: 
+                                                                <span class="w-3 h-3 rounded-full border border-gray-300 inline-block shadow-sm" style="background-color: {{ strtolower(trim($item->color)) }};" title="{{ $item->color }}"></span>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    @if(isset($item->product) && $item->product->discount_price)
+                                                        <p class="text-[11px] text-[#C5A059] mt-1.5 font-bold tracking-wide uppercase">
+                                                            * Active Discount: PKR {{ number_format($item->product->discount_price) }}
+                                                        </p>
+                                                    @endif
+                                                    
                                                 </div>
                                             </div>
                                             <div class="font-bold text-gray-900">
-                                                ${{ number_format($item->quantity * $item->price, 2) }}
+                                                PKR {{ number_format($item->quantity * $item->price) }}
                                             </div>
                                         </li>
                                     @endforeach
@@ -69,7 +92,7 @@
                                 <h3 class="font-bold text-gray-900 mb-4 border-b pb-2">Customer Details</h3>
                                 
                                 <div class="text-sm text-gray-700 space-y-2">
-                                    <p><span class="font-semibold text-gray-900">Total Amount:</span> <span class="text-lg font-extrabold text-green-600">${{ number_format($order->total_price, 2) }}</span></p>
+                                    <p><span class="font-semibold text-gray-900">Total Amount:</span> <span class="text-lg font-extrabold text-green-600">PKR {{ number_format($order->total_price) }}</span></p>
                                     <p class="mt-4"><span class="font-semibold text-gray-900">Shipping Info:</span></p>
                                     <p class="bg-white p-3 rounded border text-gray-600 leading-relaxed">
                                         {{ $order->shipping_address }}

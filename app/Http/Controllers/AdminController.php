@@ -7,18 +7,19 @@ use App\Models\Category;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage; 
 use App\Models\Slider;
+use Illuminate\Support\Facades\File;
 
 class AdminController extends Controller
 {
     // --- SLIDER MANAGEMENT LOGIC ---
 
-    // 1. Sliders ka page dikhana
+   // 1. Sliders ka page dikhana
     public function manageSliders() {
         $sliders = Slider::orderBy('created_at', 'desc')->get();
         return view('admin.sliders', compact('sliders'));
     }
 
-    // 2. Naya Slider Image Save Karna
+    // 2. Naya Slider Image Save Karna (Direct in Public Folder)
     public function storeSlider(Request $request) {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:3072', // Max 3MB
@@ -27,7 +28,12 @@ class AdminController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_slider_' . $file->getClientOriginalName();
-            $imageUrl = $file->storeAs('sliders', $filename, 'public'); 
+            
+            // MAGIC YAHAN HAI: Direct public/images/sliders folder mein move kar do
+            $file->move(public_path('images/sliders'), $filename); 
+
+            // Database mein mukammal path save karo taake frontend pe easily show ho
+            $imageUrl = 'images/sliders/' . $filename;
 
             Slider::create(['image_url' => $imageUrl]);
             return back()->with('success', 'Slider Image Added Successfully!');
@@ -35,16 +41,21 @@ class AdminController extends Controller
         return back()->with('error', 'Please select an image.');
     }
 
-    // 3. Slider Delete Karna
+    // 3. Slider Delete Karna (Database + Folder se)
     public function deleteSlider($id) {
         $slider = Slider::findOrFail($id);
         
         if ($slider->image_url && !str_contains($slider->image_url, 'http')) { 
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($slider->image_url); 
+            // Public folder se physically tasweer dhoond kar delete karna
+            $imagePath = public_path($slider->image_url);
+            if(File::exists($imagePath)) {
+                File::delete($imagePath);
+            }
         }
-        $slider->delete();
         
-        return back()->with('success', 'Slider Image Deleted!');
+        $slider->delete(); // Database se delete
+        
+        return back()->with('success', 'Slider Image Deleted Completely!');
     }
 
     // 1. Admin ko Product Add karne ka form dikhana
@@ -61,11 +72,11 @@ class AdminController extends Controller
     }
 
     // 2. Form ka data pakar kar Database mein save karna
-    public function storeProduct(Request $request) {
+public function storeProduct(Request $request) {
         $request->validate([
             'name' => 'required',
             'price' => 'required|numeric',
-            'discount_price' => 'nullable|numeric', // NAYA Validation
+            'discount_price' => 'nullable|numeric',
             'category_id' => 'required',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048', 
             'image_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -75,22 +86,27 @@ class AdminController extends Controller
 
         try {
             $img1 = null; $img2 = null; $img3 = null; $img4 = null;
+            $path = public_path('images/products'); // NAYA PATH
 
             if ($request->hasFile('image')) {
-                $file = $request->file('image');
-                $img1 = $file->storeAs('products', time() . '_1_' . $file->getClientOriginalName(), 'public'); 
+                $filename = time() . '_1_' . $request->file('image')->getClientOriginalName();
+                $request->file('image')->move($path, $filename);
+                $img1 = 'images/products/' . $filename; 
             }
             if ($request->hasFile('image_2')) {
-                $file = $request->file('image_2');
-                $img2 = $file->storeAs('products', time() . '_2_' . $file->getClientOriginalName(), 'public'); 
+                $filename = time() . '_2_' . $request->file('image_2')->getClientOriginalName();
+                $request->file('image_2')->move($path, $filename);
+                $img2 = 'images/products/' . $filename; 
             }
             if ($request->hasFile('image_3')) {
-                $file = $request->file('image_3');
-                $img3 = $file->storeAs('products', time() . '_3_' . $file->getClientOriginalName(), 'public'); 
+                $filename = time() . '_3_' . $request->file('image_3')->getClientOriginalName();
+                $request->file('image_3')->move($path, $filename);
+                $img3 = 'images/products/' . $filename; 
             }
             if ($request->hasFile('image_4')) {
-                $file = $request->file('image_4');
-                $img4 = $file->storeAs('products', time() . '_4_' . $file->getClientOriginalName(), 'public'); 
+                $filename = time() . '_4_' . $request->file('image_4')->getClientOriginalName();
+                $request->file('image_4')->move($path, $filename);
+                $img4 = 'images/products/' . $filename; 
             }
 
             $product = Product::create([
@@ -98,9 +114,9 @@ class AdminController extends Controller
                 'name' => $request->name,
                 'description' => $request->description ?? 'No description',
                 'price' => $request->price,
-                'discount_price' => $request->discount_price, // NAYA
-                'color' => $request->color,                   // NAYA
-                'size' => $request->size,                     // NAYA
+                'discount_price' => $request->discount_price,
+                'color' => $request->color,                  
+                'size' => $request->size,                    
                 'stock' => $request->stock ?? 0,
                 'image_url' => $img1,
                 'image_url_2' => $img2,
@@ -143,13 +159,11 @@ class AdminController extends Controller
         $categories = \App\Models\Category::all();
         return view('admin.edit_product', compact('product', 'categories'));
     }
-
-    // 3. Form se Data la kar Update karna (With Image Logic)
-    public function updateProduct(Request $request, $id) {
+public function updateProduct(Request $request, $id) {
         $request->validate([
             'name' => 'required',
             'price' => 'required|numeric',
-            'discount_price' => 'nullable|numeric', // NAYA Validation
+            'discount_price' => 'nullable|numeric',
             'category_id' => 'required',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'image_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -164,21 +178,31 @@ class AdminController extends Controller
         $img3 = $product->image_url_3;
         $img4 = $product->image_url_4;
         
+        $path = public_path('images/products');
+
         if ($request->hasFile('image')) {
-            if ($img1 && !str_contains($img1, 'http')) { Storage::disk('public')->delete($img1); }
-            $img1 = $request->file('image')->storeAs('products', time() . '_1_' . $request->file('image')->getClientOriginalName(), 'public');
+            if ($img1 && !str_contains($img1, 'http') && File::exists(public_path($img1))) { File::delete(public_path($img1)); }
+            $filename = time() . '_1_' . $request->file('image')->getClientOriginalName();
+            $request->file('image')->move($path, $filename);
+            $img1 = 'images/products/' . $filename;
         }
         if ($request->hasFile('image_2')) {
-            if ($img2 && !str_contains($img2, 'http')) { Storage::disk('public')->delete($img2); }
-            $img2 = $request->file('image_2')->storeAs('products', time() . '_2_' . $request->file('image_2')->getClientOriginalName(), 'public');
+            if ($img2 && !str_contains($img2, 'http') && File::exists(public_path($img2))) { File::delete(public_path($img2)); }
+            $filename = time() . '_2_' . $request->file('image_2')->getClientOriginalName();
+            $request->file('image_2')->move($path, $filename);
+            $img2 = 'images/products/' . $filename;
         }
         if ($request->hasFile('image_3')) {
-            if ($img3 && !str_contains($img3, 'http')) { Storage::disk('public')->delete($img3); }
-            $img3 = $request->file('image_3')->storeAs('products', time() . '_3_' . $request->file('image_3')->getClientOriginalName(), 'public');
+            if ($img3 && !str_contains($img3, 'http') && File::exists(public_path($img3))) { File::delete(public_path($img3)); }
+            $filename = time() . '_3_' . $request->file('image_3')->getClientOriginalName();
+            $request->file('image_3')->move($path, $filename);
+            $img3 = 'images/products/' . $filename;
         }
         if ($request->hasFile('image_4')) {
-            if ($img4 && !str_contains($img4, 'http')) { Storage::disk('public')->delete($img4); }
-            $img4 = $request->file('image_4')->storeAs('products', time() . '_4_' . $request->file('image_4')->getClientOriginalName(), 'public');
+            if ($img4 && !str_contains($img4, 'http') && File::exists(public_path($img4))) { File::delete(public_path($img4)); }
+            $filename = time() . '_4_' . $request->file('image_4')->getClientOriginalName();
+            $request->file('image_4')->move($path, $filename);
+            $img4 = 'images/products/' . $filename;
         }
         
         $product->update([
@@ -186,9 +210,9 @@ class AdminController extends Controller
             'name' => $request->name,
             'description' => $request->description ?? 'No description',
             'price' => $request->price,
-            'discount_price' => $request->discount_price, // NAYA
-            'color' => $request->color,                   // NAYA
-            'size' => $request->size,                     // NAYA
+            'discount_price' => $request->discount_price,
+            'color' => $request->color,                  
+            'size' => $request->size,                    
             'stock' => $request->stock ?? 0,
             'image_url' => $img1,
             'image_url_2' => $img2,
@@ -203,10 +227,10 @@ class AdminController extends Controller
     public function deleteProduct($id) {
         $product = \App\Models\Product::findOrFail($id);
         
-        if ($product->image_url && !str_contains($product->image_url, 'http')) { Storage::disk('public')->delete($product->image_url); }
-        if ($product->image_url_2 && !str_contains($product->image_url_2, 'http')) { Storage::disk('public')->delete($product->image_url_2); }
-        if ($product->image_url_3 && !str_contains($product->image_url_3, 'http')) { Storage::disk('public')->delete($product->image_url_3); }
-        if ($product->image_url_4 && !str_contains($product->image_url_4, 'http')) { Storage::disk('public')->delete($product->image_url_4); }
+        if ($product->image_url && !str_contains($product->image_url, 'http') && File::exists(public_path($product->image_url))) { File::delete(public_path($product->image_url)); }
+        if ($product->image_url_2 && !str_contains($product->image_url_2, 'http') && File::exists(public_path($product->image_url_2))) { File::delete(public_path($product->image_url_2)); }
+        if ($product->image_url_3 && !str_contains($product->image_url_3, 'http') && File::exists(public_path($product->image_url_3))) { File::delete(public_path($product->image_url_3)); }
+        if ($product->image_url_4 && !str_contains($product->image_url_4, 'http') && File::exists(public_path($product->image_url_4))) { File::delete(public_path($product->image_url_4)); }
 
         $product->delete();
         

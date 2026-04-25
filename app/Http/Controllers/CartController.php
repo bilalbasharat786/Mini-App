@@ -36,12 +36,15 @@ class CartController extends Controller
             // Agar naya product hai toh cart mein add karo
             $imageUrl = $product->image_url ?? 'https://picsum.photos/seed/'.$product->id.'/400/300';
             
-            $cart[$id] = [
-                "name" => $product->name,
-                "quantity" => 1,
-                "price" => $product->price,
-                "image" => $imageUrl
-            ];
+          $cart[$id] = [
+    "name" => $product->name,
+    "quantity" => 1,
+    "price" => $product->price,
+    "discount_price" => $product->discount_price, // <--- یہ لائن لازمی ہونی چاہیے!
+    "image" => $product->image_url,
+    "size" => $request->size,
+    "color" => $request->color
+];
             Log::info("CART LOG: Added new product to cart ID: " . $id);
         }
 

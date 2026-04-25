@@ -8,18 +8,21 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    public function myOrders() {
-        // Agar user login nahi hai, toh wapas bhej do
-        if(!Auth::check()) {
-            return redirect('/login')->with('error', 'Please login to view your orders.');
+   public function myOrders() {
+        // Naya Logic: Login User ya Guest User dono ke orders dikhao
+        $query = \App\Models\Order::query();
+
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            // Agar user login hai, toh uske account wale orders uthao
+            $query->where('user_id', \Illuminate\Support\Facades\Auth::id());
+        } else {
+            // Agar bina login ke aaya hai, toh Session wale orders uthao
+            $guestOrders = session()->get('guest_orders', []);
+            $query->whereIn('id', $guestOrders);
         }
 
-        // Sirf is user ke orders nikalo
-        $orders = Order::with('items.product')
-                    ->where('user_id', Auth::id())
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-                    
+        $orders = $query->with('items.product')->orderBy('created_at', 'desc')->get();
+        
         return view('user.orders', compact('orders'));
     }
 }
